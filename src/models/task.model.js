@@ -8,10 +8,13 @@ class TaskModel {
 	}
 
 	async create(taskData) {
-		const { title, content } = taskData;
+		const { title } = taskData;
+		const query = "insert into tasks (title) value (?)";
 
-		const query = "insert into tasks (title, content) value (?, ?)";
-		const [rows] = await pool.query(query, [title, content]);
+		const [result] = await pool.query(query, [title]);
+		const insertedId = result.insertId;
+		const [rows] = await pool.query("select * from tasks where id = ?", [insertedId]);
+
 		return rows[0];
 	}
 
@@ -22,15 +25,17 @@ class TaskModel {
 	}
 
 	async update(id, taskData) {
+		const { title } = taskData;
 		const query = "update tasks set title = ? WHERE id = ?;";
-		const [rows] = await pool.query(query, [taskData, id]);
-		return rows;
+		await pool.query(query, [title, id]);
+		const [rows] = await pool.query("select * from tasks where id = ?", [id]);
+		return rows[0];
 	}
 
 	async destroy(id) {
-		const query = "delete from posts where id = ?;";
-		const [rows] = await pool.query(query, [id]);
-		return rows;
+		const query = "delete from tasks where id = ?;";
+		const [{ affectedRows }] = await pool.query(query, [id]);
+		return affectedRows;
 	}
 }
 
